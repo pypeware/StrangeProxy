@@ -12,14 +12,17 @@
 
 package io.d2a.strangeproxy.config;
 
+import com.github.steveice10.mc.protocol.data.status.VersionInfo;
 import com.google.gson.annotations.SerializedName;
 
 public class Config {
 
-    public StrangeProxy strangeProxy;
+    public StrangeProxy strangeproxy;
     public MaxMind maxmind;
     public Status status;
     public Mirroring mirroring;
+
+    public VersionInfo versionInfo = null;
 
     public static class StrangeProxy {
         @SerializedName("host")

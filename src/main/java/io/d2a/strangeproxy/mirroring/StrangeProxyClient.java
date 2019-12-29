@@ -64,6 +64,8 @@ public class StrangeProxyClient {
                 StrangeProxy.getConfig().status.maxPlayers = info.getPlayerInfo().getMaxPlayers();
                 StrangeProxy.getConfig().status.currentPlayers = info.getPlayerInfo().getOnlinePlayers();
 
+                StrangeProxy.getConfig().versionInfo = info.getVersionInfo();
+
                 // Disconnect client
                 session.disconnect("");
             }

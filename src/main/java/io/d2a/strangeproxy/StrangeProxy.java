@@ -107,8 +107,8 @@ public class StrangeProxy implements Runnable {
 
     @Override
     public void run() {
-        final String host = config.strangeProxy.host;
-        final int port = config.strangeProxy.port;
+        final String host = config.strangeproxy.host;
+        final int port = config.strangeproxy.port;
 
         Server server = new Server(
                 host,
@@ -124,7 +124,9 @@ public class StrangeProxy implements Runnable {
         System.out.println(config.status.maxPlayers);
 
         server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> new ServerStatusInfo(
-                new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                config.versionInfo != null
+                        ? config.versionInfo
+                        : new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
                 new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
                 new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
                 null
@@ -139,9 +141,9 @@ public class StrangeProxy implements Runnable {
             }
         });
 
-        System.out.println("-> Binding on port: " + port + ", host: " + host + " ...");
+        System.out.print("-> Binding on port: " + port + ", host: " + host + " ...");
         server.bind();
-        System.out.println("-> Done!");
+        System.out.println(" Done!");
 
         if (config.mirroring.enabled) {
             final StrangeProxyClient strangeProxyClient = new StrangeProxyClient(config);
