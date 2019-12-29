@@ -28,39 +28,87 @@ import com.github.steveice10.packetlib.event.server.ServerClosedEvent;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.moandjiezana.toml.Toml;
+import io.d2a.strangeproxy.asn.MaxMindDatabase;
+import io.d2a.strangeproxy.config.Config;
+import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
 import lombok.Getter;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.Proxy;
 
 public class StrangeProxy implements Runnable {
 
-    final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .create();
+
+    private static final File CONFIG_FILE = new File("config.toml");
+
+    ////////////////////////////////////////////////////////////////////////
+    @Getter
+    private static StrangeProxy instance;
+    @Getter
+    private static Config config;
+    @Getter
+    private MaxMindDatabase database;
+
+    ////////////////////////////////////////////////////////////////////////
     @Getter
     private String host;
-    //////////////////////////////////////////////////
     @Getter
     private int port;
+
+    ////////////////////////////////////////////////////////////////////////
+
+    /*
+     * Constructor
+     */
+    public StrangeProxy(String host, int port) {
+        this.host = host;
+        this.port = port;
+
+        // Read config
+        try {
+
+            // Config exists?
+            if (CONFIG_FILE.exists() && !CONFIG_FILE.isFile()) {
+                throw new RuntimeException("Invalid file.");
+            }
+
+            if (!CONFIG_FILE.exists()) {
+                throw new RuntimeException("Config file does not exist!");
+            }
+
+            StrangeProxy.config = new Toml().read(CONFIG_FILE).to(Config.class);
+        } catch (RuntimeException rtex) {
+            rtex.printStackTrace();
+            System.exit(1);
+            return;
+        }
+
+        System.out.println("Loaded config:");
+        System.out.println(GSON.toJson(StrangeProxy.config));
+
+        // Database
+        try {
+            this.database = new MaxMindDatabase(config);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
+
+        //run();
+    }
 
     /*
      * Main
      */
     public static void main(String[] args) {
-        new StrangeProxy()
-                .setHost("127.0.0.1")
-                .setPort(25565)
-                .run();
+        new StrangeProxy("127.0.0.1", 25566);
     }
-
-    public StrangeProxy setHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    public StrangeProxy setPort(int port) {
-        this.port = port;
-        return this;
-    }
-
 
     @Override
     public void run() {
@@ -74,83 +122,26 @@ public class StrangeProxy implements Runnable {
         // Global Flags
         server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, Proxy.NO_PROXY);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
-        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> new ServerStatusInfo(
-                new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
-                new PlayerInfo(10000, 1337, new GameProfile[0]),
-                new TextMessage("§c§lBitte deaktiviere deinen VPN!"),
-                null
-        ));
-        server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, new ServerLoginHandler() {
+
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, new ServerInfoBuilder() {
             @Override
-            public void loggedIn(Session session) {
-//                System.out.println("+ Session: " + session.getHost());
-                session.disconnect("");
+            public ServerStatusInfo buildInfo(Session session) {
+                return new ServerStatusInfo(
+                        new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                        new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
+                        new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
+                        null
+                );
             }
         });
+
+        server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, (ServerLoginHandler) session -> session.disconnect(""));
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100);
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
                 System.out.println("-- Server closed. --");
             }
-
-//            @Override
-//            public void sessionAdded(SessionAddedEvent event) {
-//                System.out.println("New Session: " + gson.toJson(event.getSession()));
-//
-//                event.getSession().addListener(new SessionAdapter() {
-//                    @Override
-//                    public void packetReceived(PacketReceivedEvent event) {
-//                        if(event.getPacket() instanceof ClientChatPacket) {
-//
-//                            System.out.println(gson.toJson(event.getPacket()));
-//
-//                            ClientChatPacket packet = event.getPacket();
-//                            GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
-//                            System.out.println(profile.getName() + ": " + packet.getMessage());
-//                            Message msg = new TextMessage("Hello, ").setStyle(new MessageStyle().setColor(ChatColor.GREEN));
-//                            Message name = new TextMessage(profile.getName()).setStyle(new MessageStyle().setColor(ChatColor.AQUA).addFormat(ChatFormat.UNDERLINED));
-//                            Message end = new TextMessage("!");
-//                            msg.addExtra(name);
-//                            msg.addExtra(end);
-//                            event.getSession().send(new ServerChatPacket(msg));
-//                        }
-//                    }
-//                });
-
-//                event.getSession().addListener(new SessionAdapter() {
-//                    @Override
-//                    public void connected(ConnectedEvent event) {
-//                        event.getSession().disconnect("§aHi");
-//                    }
-//                });
-//                event.getSession().disconnect("§c§lNö!", true);
-//                event.getSession().addListener(new SessionAdapter() {
-//                    @Override
-//                    public void packetReceived(PacketReceivedEvent event) {
-//                        if(event.getPacket() instanceof ClientChatPacket) {
-//                            ClientChatPacket packet = event.getPacket();
-//                            GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
-//                            System.out.println(profile.getName() + ": " + packet.getMessage());
-//                            Message msg = new TextMessage("Hello, ").setStyle(new MessageStyle().setColor(ChatColor.GREEN));
-//                            Message name = new TextMessage(profile.getName()).setStyle(new MessageStyle().setColor(ChatColor.AQUA).addFormat(ChatFormat.UNDERLINED));
-//                            Message end = new TextMessage("!");
-//                            msg.addExtra(name);
-//                            msg.addExtra(end);
-//                            event.getSession().send(new ServerChatPacket(msg));
-//                        }
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void sessionRemoved(SessionRemovedEvent event) {
-//                MinecraftProtocol protocol = (MinecraftProtocol) event.getSession().getPacketProtocol();
-//                if(protocol.getSubProtocol() == SubProtocol.GAME) {
-//                    System.out.println("Closing server.");
-//                    event.getServer().close(false);
-//                }
-//            }
         });
 
         System.out.println("-> Binding on port: " + port + ", host: " + host + " ...");

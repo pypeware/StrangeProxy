@@ -4,6 +4,7 @@ import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.auth.service.SessionService;
 import com.github.steveice10.mc.protocol.data.SubProtocol;
+import com.github.steveice10.mc.protocol.data.message.ChatColor;
 import com.github.steveice10.mc.protocol.data.message.Message;
 import com.github.steveice10.mc.protocol.data.status.PlayerInfo;
 import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo;
@@ -28,6 +29,8 @@ import com.github.steveice10.packetlib.event.session.ConnectedEvent;
 import com.github.steveice10.packetlib.event.session.DisconnectingEvent;
 import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
+import io.d2a.strangeproxy.StrangeProxy;
+import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
 
 import javax.crypto.SecretKey;
 import java.net.Proxy;
@@ -84,13 +87,11 @@ public class ServerListener extends SessionAdapter {
                     case LOGIN:
                         protocol.setSubProtocol(SubProtocol.LOGIN, false, event.getSession());
 
-//                        if(packet.getProtocolVersion() > MinecraftConstants.PROTOCOL_VERSION) {
-//                            event.getSession().disconnect("Outdated server! I'm still on " + MinecraftConstants.GAME_VERSION + ".");
-//                        } else if(packet.getProtocolVersion() < MinecraftConstants.PROTOCOL_VERSION) {
-//                            event.getSession().disconnect("Outdated client! Please use " + MinecraftConstants.GAME_VERSION + ".");
-//                        }
-
-                        event.getSession().disconnect("§7§m---------------------------------------\n\n§cBitte deaktiviere deinen VPN!\n\n§7§m---------------------------------------");
+                        // Kick message
+                        event.getSession().disconnect(PlaceholderReplacer.coloredApply(
+                                event.getSession(),
+                                StrangeProxy.getConfig().status.motd
+                        ));
 
                         break;
                     default:
