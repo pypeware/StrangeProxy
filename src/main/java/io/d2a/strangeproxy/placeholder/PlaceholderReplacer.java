@@ -26,11 +26,15 @@ public class PlaceholderReplacer {
     ));
 
     public static String apply(Session session, String string) {
+        System.out.println("Apply to '" + string + "'");
         String result = string;
 
         for (Placeholder placeholder : placeholders) {
             if (string.contains(placeholder.fullPlaceholder())) {
+                System.out.println("  -> Found " + placeholder.fullPlaceholder());
+
                 final String apply = placeholder.apply(session, string);
+                System.out.println("  -> " + apply);
                 if (apply != null) {
                     result = result.replace(placeholder.fullPlaceholder(), apply);
                 }
@@ -41,8 +45,18 @@ public class PlaceholderReplacer {
     }
 
     public static String coloredApply(Session session, String string) {
-        return apply(session, string)
-                .replaceAll("&[0-9a-fk-or]", "\u00A7");
+        return translateColorCodes(apply(session, string));
+    }
+
+    public static String translateColorCodes(String textToTranslate) {
+        char[] b = textToTranslate.toCharArray();
+        for (int i = 0; i < b.length - 1; i++) {
+            if (b[i] == '&' && "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".indexOf(b[i+1]) > -1) {
+                b[i] = '\u00A7';
+                b[i+1] = Character.toLowerCase(b[i+1]);
+            }
+        }
+        return new String(b);
     }
 
 }

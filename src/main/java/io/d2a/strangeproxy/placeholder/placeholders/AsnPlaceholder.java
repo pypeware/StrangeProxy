@@ -28,14 +28,12 @@ public class AsnPlaceholder implements Placeholder {
 
     @Override
     public String apply(Session session, String input) {
-
         try {
             InetAddress address = InetAddress.getByName(session.getHost());
             final Integer asnUnsafe = StrangeProxy.getInstance().getDatabase().getReader().getAsnUnsafe(address);
             return asnUnsafe != null ? String.valueOf(asnUnsafe) : null;
         } catch (UnknownHostException ignored) {
         }
-
         return null;
     }
 

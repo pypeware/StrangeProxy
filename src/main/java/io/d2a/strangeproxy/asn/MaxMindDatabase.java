@@ -28,19 +28,35 @@ public class MaxMindDatabase {
     private DatabaseReader databaseReader;
 
     public MaxMindDatabase(Config config) throws IOException {
+        if (config == null
+                || config.maxmind == null
+                || config.maxmind.databaseFile == null
+                || config.maxmind.databaseFile.length() < 1) {
+            System.out.println("Invalid. " + config.maxmind.databaseFile);
+            return;
+        }
+
         Config.MaxMind maxMindConfig = config.maxmind;
         File databaseFile = new File(maxMindConfig.databaseFile);
 
         // Update?
+        System.out.println("[MaxMind] Checking for updates ...");
         MaxMindDatabaseUpdater updater = new MaxMindDatabaseUpdater(config, databaseFile);
         if (updater.check()) {
             System.out.println("[MaxMind] Updating MaxMind Database.");
             long start = System.currentTimeMillis();
-            updater.updateSync(updater.buildUpdateUrl(), databaseFile);
-            System.out.println("[MaxMind] Successfully updated database. Took " + (System.currentTimeMillis() - start) + "ms");
+            updater.updateSync(updater.buildUpdateUrl(), new File(databaseFile.getPath() + ".gz"));
+            System.out.println("[MaxMind] Successfully downloaded database. Took " + (System.currentTimeMillis() - start) + "ms");
+            start = System.currentTimeMillis();
+            System.out.println("[MaxMind] Unzipping downloaded database ...");
+            new GZipFile(databaseFile.getPath() + ".gz", databaseFile.getPath()).unzip();
+            System.out.println("[MaxMind] Successfully unzipped database. Took " + (System.currentTimeMillis() - start) + "ms");
         }
 
-        this.databaseReader = new DatabaseReader.Builder(databaseFile).build();
+        this.databaseReader = new DatabaseReader.Builder(databaseFile)
+                .build();
+
+        this.reader = new MaxMindDatabaseReader(this);
     }
 
 }

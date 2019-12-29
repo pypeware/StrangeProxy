@@ -18,6 +18,7 @@ public class Config {
 
     public MaxMind maxmind;
     public Status status;
+    public Mirroring mirroring;
 
     public static class MaxMind {
         @SerializedName("url")
@@ -30,10 +31,10 @@ public class Config {
         public String databaseFile;
 
         @SerializedName("update_interval")
-        public String updateInterval;
+        public int updateInterval;
     }
 
-    public class Status {
+    public static class Status {
         @SerializedName("current_players")
         public int currentPlayers = 69;
 
@@ -42,6 +43,17 @@ public class Config {
 
         @SerializedName("motd")
         public String motd = "&c&lBitte deaktivere deinen VPN.";
+    }
+
+    public static class Mirroring {
+        @SerializedName("enabled")
+        public boolean enabled;
+
+        @SerializedName("host")
+        public String host;
+
+        @SerializedName("port")
+        public int port;
     }
 
 }

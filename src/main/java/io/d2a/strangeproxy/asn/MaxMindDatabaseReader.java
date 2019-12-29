@@ -27,6 +27,7 @@ public class MaxMindDatabaseReader {
     }
 
     public int getAsn(InetAddress address) throws IOException, GeoIp2Exception {
+        System.out.println("  -> Get asn for " + address);
         final AsnResponse asn = this.db.getDatabaseReader().asn(address);
         return asn.getAutonomousSystemNumber();
     }

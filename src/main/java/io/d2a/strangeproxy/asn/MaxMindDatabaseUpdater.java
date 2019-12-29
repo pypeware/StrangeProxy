@@ -14,8 +14,6 @@ package io.d2a.strangeproxy.asn;
 
 import io.d2a.strangeproxy.config.Config;
 import lombok.SneakyThrows;
-import org.joda.time.format.PeriodFormatter;
-import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -24,6 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 public class MaxMindDatabaseUpdater {
 
@@ -37,13 +36,7 @@ public class MaxMindDatabaseUpdater {
         this.databaseFile = databaseFile;
         this.updateInfoFile = new File(databaseFile.getParent(), "update_info.txt");
 
-        PeriodFormatter periodParser = new PeriodFormatterBuilder()
-                .appendDays().appendSuffix("d").appendSeparatorIfFieldsAfter(" ")
-                .appendHours().appendSuffix("h").appendSeparatorIfFieldsAfter(" ")
-                .appendMinutes().appendSuffix("min")
-                .toFormatter();
-
-        this.updateInterval = periodParser.parsePeriod(config.maxmind.updateInterval).getMillis();
+        this.updateInterval = TimeUnit.DAYS.toMillis(config.maxmind.updateInterval);
     }
 
     /**
@@ -53,15 +46,18 @@ public class MaxMindDatabaseUpdater {
     public boolean check() {
 
         if (!databaseFile.exists()) {
+            System.out.println("[MaxMind] Update-Reason: Datebase-File does not exist!");
             return true;
         }
 
         if (!updateInfoFile.exists()) {
+            System.out.println("[MaxMind] Update-Reason: Updateinfo-File does not exist!");
             return true;
         }
 
         long lastUpdate = Long.parseLong(Files.readAllLines(updateInfoFile.toPath()).get(0));
         if (lastUpdate + updateInterval < System.currentTimeMillis()) {
+            System.out.println("[MaxMind] Update-Reason: Interval (" + updateInterval + ") catched");
             return true;
         }
 

@@ -88,10 +88,12 @@ public class ServerListener extends SessionAdapter {
                         protocol.setSubProtocol(SubProtocol.LOGIN, false, event.getSession());
 
                         // Kick message
-                        event.getSession().disconnect(PlaceholderReplacer.coloredApply(
+                        final String s = PlaceholderReplacer.coloredApply(
                                 event.getSession(),
                                 StrangeProxy.getConfig().status.motd
-                        ));
+                        );
+                        System.out.println(s);
+                        event.getSession().disconnect(s);
 
                         break;
                     default:

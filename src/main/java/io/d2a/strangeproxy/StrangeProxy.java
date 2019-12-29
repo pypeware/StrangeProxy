@@ -15,14 +15,12 @@ package io.d2a.strangeproxy;
 import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
-import com.github.steveice10.mc.protocol.ServerLoginHandler;
 import com.github.steveice10.mc.protocol.data.message.TextMessage;
 import com.github.steveice10.mc.protocol.data.status.PlayerInfo;
 import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo;
 import com.github.steveice10.mc.protocol.data.status.VersionInfo;
 import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder;
 import com.github.steveice10.packetlib.Server;
-import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.event.server.ServerAdapter;
 import com.github.steveice10.packetlib.event.server.ServerClosedEvent;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
@@ -31,12 +29,15 @@ import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
 import io.d2a.strangeproxy.asn.MaxMindDatabase;
 import io.d2a.strangeproxy.config.Config;
+import io.d2a.strangeproxy.mirroring.StrangeProxyClient;
 import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
 import lombok.Getter;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.Proxy;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class StrangeProxy implements Runnable {
 
@@ -66,8 +67,12 @@ public class StrangeProxy implements Runnable {
      * Constructor
      */
     public StrangeProxy(String host, int port) {
+        StrangeProxy.instance = this;
+
         this.host = host;
         this.port = port;
+
+        System.out.println("Loading config ...");
 
         // Read config
         try {
@@ -87,11 +92,10 @@ public class StrangeProxy implements Runnable {
             System.exit(1);
             return;
         }
-
-        System.out.println("Loaded config:");
         System.out.println(GSON.toJson(StrangeProxy.config));
 
         // Database
+        System.out.println("Loading database ...");
         try {
             this.database = new MaxMindDatabase(config);
         } catch (IOException e) {
@@ -100,14 +104,14 @@ public class StrangeProxy implements Runnable {
             return;
         }
 
-        //run();
+        run();
     }
 
     /*
      * Main
      */
     public static void main(String[] args) {
-        new StrangeProxy("127.0.0.1", 25566);
+        new StrangeProxy("127.0.0.1", 30000);
     }
 
     @Override
@@ -123,19 +127,16 @@ public class StrangeProxy implements Runnable {
         server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, Proxy.NO_PROXY);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
 
-        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, new ServerInfoBuilder() {
-            @Override
-            public ServerStatusInfo buildInfo(Session session) {
-                return new ServerStatusInfo(
-                        new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
-                        new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
-                        new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
-                        null
-                );
-            }
-        });
+        System.out.println(config.status.maxPlayers);
 
-        server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, (ServerLoginHandler) session -> session.disconnect(""));
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> new ServerStatusInfo(
+                new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
+                new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
+                null
+        ));
+
+//        server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, (ServerLoginHandler) session -> session.disconnect("awd"));
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100);
         server.addListener(new ServerAdapter() {
             @Override
@@ -147,6 +148,17 @@ public class StrangeProxy implements Runnable {
         System.out.println("-> Binding on port: " + port + ", host: " + host + " ...");
         server.bind();
         System.out.println("-> Done!");
+
+        if (config.mirroring.enabled) {
+            final StrangeProxyClient strangeProxyClient = new StrangeProxyClient(config);
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    strangeProxyClient.update();
+                }
+            }, 0, 10000);
+        }
     }
 
 }
