@@ -56,21 +56,12 @@ public class StrangeProxy implements Runnable {
     private MaxMindDatabase database;
 
     ////////////////////////////////////////////////////////////////////////
-    @Getter
-    private String host;
-    @Getter
-    private int port;
-
-    ////////////////////////////////////////////////////////////////////////
 
     /*
      * Constructor
      */
-    public StrangeProxy(String host, int port) {
+    public StrangeProxy() {
         StrangeProxy.instance = this;
-
-        this.host = host;
-        this.port = port;
 
         System.out.println("Loading config ...");
 
@@ -111,11 +102,14 @@ public class StrangeProxy implements Runnable {
      * Main
      */
     public static void main(String[] args) {
-        new StrangeProxy("127.0.0.1", 30000);
+        new StrangeProxy();
     }
 
     @Override
     public void run() {
+        final String host = config.strangeProxy.host;
+        final int port = config.strangeProxy.port;
+
         Server server = new Server(
                 host,
                 port,

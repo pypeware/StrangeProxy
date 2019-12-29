@@ -16,9 +16,18 @@ import com.google.gson.annotations.SerializedName;
 
 public class Config {
 
+    public StrangeProxy strangeProxy;
     public MaxMind maxmind;
     public Status status;
     public Mirroring mirroring;
+
+    public static class StrangeProxy {
+        @SerializedName("host")
+        public String host;
+
+        @SerializedName("port")
+        public int port;
+    }
 
     public static class MaxMind {
         @SerializedName("url")
