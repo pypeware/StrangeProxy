@@ -83,11 +83,14 @@ public class ServerListener extends SessionAdapter {
                         break;
                     case LOGIN:
                         protocol.setSubProtocol(SubProtocol.LOGIN, false, event.getSession());
-                        if(packet.getProtocolVersion() > MinecraftConstants.PROTOCOL_VERSION) {
-                            event.getSession().disconnect("Outdated server! I'm still on " + MinecraftConstants.GAME_VERSION + ".");
-                        } else if(packet.getProtocolVersion() < MinecraftConstants.PROTOCOL_VERSION) {
-                            event.getSession().disconnect("Outdated client! Please use " + MinecraftConstants.GAME_VERSION + ".");
-                        }
+
+//                        if(packet.getProtocolVersion() > MinecraftConstants.PROTOCOL_VERSION) {
+//                            event.getSession().disconnect("Outdated server! I'm still on " + MinecraftConstants.GAME_VERSION + ".");
+//                        } else if(packet.getProtocolVersion() < MinecraftConstants.PROTOCOL_VERSION) {
+//                            event.getSession().disconnect("Outdated client! Please use " + MinecraftConstants.GAME_VERSION + ".");
+//                        }
+
+                        event.getSession().disconnect("§7§m---------------------------------------\n\n§cBitte deaktiviere deinen VPN!\n\n§7§m---------------------------------------");
 
                         break;
                     default:
@@ -123,6 +126,7 @@ public class ServerListener extends SessionAdapter {
         if(protocol.getSubProtocol() == SubProtocol.STATUS) {
             if(event.getPacket() instanceof StatusQueryPacket) {
                 ServerInfoBuilder builder = event.getSession().getFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY);
+
                 if(builder == null) {
                     builder = session -> new ServerStatusInfo(
                             VersionInfo.CURRENT,

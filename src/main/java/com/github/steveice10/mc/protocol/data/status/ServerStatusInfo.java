@@ -10,7 +10,7 @@ import lombok.Setter;
 import java.awt.image.BufferedImage;
 
 @Data
-@Setter(AccessLevel.NONE)
+@Setter
 @AllArgsConstructor
 public class ServerStatusInfo {
     private @NonNull VersionInfo versionInfo;
