@@ -12,7 +12,7 @@
 
 package io.d2a.strangeproxy.config;
 
-import com.github.steveice10.mc.protocol.data.status.VersionInfo;
+import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo;
 import com.google.gson.annotations.SerializedName;
 
 public class Config {
@@ -22,7 +22,7 @@ public class Config {
     public Status status;
     public Mirroring mirroring;
 
-    public VersionInfo versionInfo = null;
+    public ServerStatusInfo serverStatusInfo = null;
 
     public static class StrangeProxy {
         @SerializedName("host")
@@ -30,6 +30,9 @@ public class Config {
 
         @SerializedName("port")
         public int port;
+
+        @SerializedName("kick_message")
+        public String kickMessage;
     }
 
     public static class MaxMind {
@@ -66,6 +69,9 @@ public class Config {
 
         @SerializedName("port")
         public int port;
+
+        @SerializedName("update_interval")
+        public int updateInterval;
     }
 
 }

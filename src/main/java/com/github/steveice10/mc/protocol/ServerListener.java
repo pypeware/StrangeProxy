@@ -90,7 +90,7 @@ public class ServerListener extends SessionAdapter {
                         // Kick message
                         final String s = PlaceholderReplacer.coloredApply(
                                 event.getSession(),
-                                StrangeProxy.getConfig().status.motd
+                                StrangeProxy.getConfig().strangeproxy.kickMessage
                         );
                         event.getSession().disconnect(s);
 

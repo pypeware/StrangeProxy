@@ -40,8 +40,6 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import java.io.File;
 import java.io.IOException;
 import java.net.Proxy;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class StrangeProxy implements Runnable {
 
@@ -59,8 +57,6 @@ public class StrangeProxy implements Runnable {
     private static StrangeProxy instance;
     @Getter
     private static Config config;
-    @Getter
-    private MaxMindDatabase database;
 
     // For log4j 2
     static {
@@ -70,6 +66,9 @@ public class StrangeProxy implements Runnable {
                 PatternLayout.class
         };
     }
+
+    @Getter
+    private MaxMindDatabase database;
 
     ////////////////////////////////////////////////////////////////////////
 
@@ -141,14 +140,15 @@ public class StrangeProxy implements Runnable {
         server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, Proxy.NO_PROXY);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
 
-        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> new ServerStatusInfo(
-                config.versionInfo != null
-                        ? config.versionInfo
-                        : new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
-                new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
-                new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
-                null
-        ));
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> config.serverStatusInfo != null
+                        ? config.serverStatusInfo
+                        : new ServerStatusInfo(
+                        new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                        new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
+                        new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
+                        null
+                )
+        );
 
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100);
         server.addListener(new ServerAdapter() {
@@ -162,16 +162,9 @@ public class StrangeProxy implements Runnable {
         server.bind();
         getLogger().info("Done binding!");
 
-        if (config.mirroring.enabled) {
-            final StrangeProxyClient strangeProxyClient = new StrangeProxyClient(config);
-
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    strangeProxyClient.update();
-                }
-            }, 0, 10000);
-        }
+        // Mirroring Task
+        new StrangeProxyClient(config)
+                .startUpdateTask();
     }
 
 }
