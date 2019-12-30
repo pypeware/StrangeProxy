@@ -1,0 +1,19 @@
+[strangeproxy]
+    host = "0.0.0.0"
+    port = 5187
+
+[maxmind]
+    url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key={license_key}&suffix=tar.gz"
+    license_key = "OtJgxTdRMjc8vbUD"
+    database_file = "database//mm_geo_lite.mmd"
+    update_interval = 1 # in days
+
+[status]
+    current_players = 69
+    max_players = 88
+    motd = "&c&lBitte deaktivere deinen Proxy. &8| &7ASN: &b{asn}"
+
+[mirroring]
+    enabled = true
+    host = "bng02.eg.horst-int.ovh"
+    port = 5187

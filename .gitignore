@@ -11,3 +11,7 @@ testing
 *.iml
 .idea
 
+database/
+logs/
+
+dependency-reduced-pom.xml

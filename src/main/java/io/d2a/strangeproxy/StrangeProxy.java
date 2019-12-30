@@ -28,10 +28,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
 import io.d2a.strangeproxy.asn.MaxMindDatabase;
+import io.d2a.strangeproxy.command.StrangeProxyCommandManager;
+import io.d2a.strangeproxy.command.commands.StatusCommand;
 import io.d2a.strangeproxy.config.Config;
 import io.d2a.strangeproxy.mirroring.StrangeProxyClient;
 import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
 import lombok.Getter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +51,9 @@ public class StrangeProxy implements Runnable {
 
     private static final File CONFIG_FILE = new File("config.toml");
 
+    @Getter
+    private static final Logger logger = LogManager.getLogger(StrangeProxy.class);
+
     ////////////////////////////////////////////////////////////////////////
     @Getter
     private static StrangeProxy instance;
@@ -55,6 +62,11 @@ public class StrangeProxy implements Runnable {
     @Getter
     private MaxMindDatabase database;
 
+    @Getter
+    private StrangeProxyConsole console;
+
+    @Getter
+    private StrangeProxyCommandManager commandManager;
     ////////////////////////////////////////////////////////////////////////
 
     /*
@@ -63,7 +75,15 @@ public class StrangeProxy implements Runnable {
     public StrangeProxy() {
         StrangeProxy.instance = this;
 
-        System.out.println("Loading config ...");
+        // Console
+        this.console = new StrangeProxyConsole(this);
+        this.console.setupStreams();
+
+        // Command Manager
+        this.commandManager = new StrangeProxyCommandManager();
+        this.commandManager.register(new StatusCommand(), "status");
+
+        getLogger().info("Loading config ...");
 
         // Read config
         try {
@@ -77,20 +97,24 @@ public class StrangeProxy implements Runnable {
                 throw new RuntimeException("Config file does not exist!");
             }
 
-            StrangeProxy.config = new Toml().read(CONFIG_FILE).to(Config.class);
+            // Parse config
+            StrangeProxy.config = new Toml()
+                    .read(CONFIG_FILE)
+                    .to(Config.class);
+
         } catch (RuntimeException rtex) {
-            rtex.printStackTrace();
+            getLogger().error("Could not read config", rtex);
             System.exit(1);
             return;
         }
-        System.out.println(GSON.toJson(StrangeProxy.config));
+//        System.out.println(GSON.toJson(StrangeProxy.config));
 
         // Database
-        System.out.println("Loading database ...");
+        getLogger().info("Loading database ...");
         try {
             this.database = new MaxMindDatabase(config);
         } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().error("Could not read database", e);
             System.exit(1);
             return;
         }
@@ -137,13 +161,13 @@ public class StrangeProxy implements Runnable {
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
-                System.out.println("-- Server closed. --");
+                getLogger().info("-- Server closed. --");
             }
         });
 
-        System.out.print("-> Binding on port: " + port + ", host: " + host + " ...");
+        getLogger().info("-> Binding on port: " + port + ", host: " + host + " ...");
         server.bind();
-        System.out.println(" Done!");
+        getLogger().info(" Done!");
 
         if (config.mirroring.enabled) {
             final StrangeProxyClient strangeProxyClient = new StrangeProxyClient(config);
@@ -155,6 +179,8 @@ public class StrangeProxy implements Runnable {
                 }
             }, 0, 10000);
         }
+
+        getLogger().error("Test");
     }
 
 }

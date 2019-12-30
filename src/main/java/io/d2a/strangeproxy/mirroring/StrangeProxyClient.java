@@ -58,7 +58,6 @@ public class StrangeProxyClient {
             @Override
             public void handle(Session session, ServerStatusInfo info) {
                 final BaseComponent[] parse = ComponentSerializer.parse(info.getDescription().toJsonString());
-                System.out.println(Arrays.toString(parse));
 
                 StrangeProxy.getConfig().status.motd = new TextComponent(parse).toLegacyText();
                 StrangeProxy.getConfig().status.maxPlayers = info.getPlayerInfo().getMaxPlayers();
