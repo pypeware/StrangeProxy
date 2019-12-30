@@ -14,6 +14,7 @@ package io.d2a.strangeproxy.asn;
 
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.AsnResponse;
+import io.d2a.strangeproxy.StrangeProxy;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -27,7 +28,7 @@ public class MaxMindDatabaseReader {
     }
 
     public int getAsn(InetAddress address) throws IOException, GeoIp2Exception {
-        System.out.println("  -> Get asn for " + address);
+        StrangeProxy.getLogger().debug("  -> Get asn for " + address);
         final AsnResponse asn = this.db.getDatabaseReader().asn(address);
         return asn.getAutonomousSystemNumber();
     }

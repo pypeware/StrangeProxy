@@ -28,14 +28,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.moandjiezana.toml.Toml;
 import io.d2a.strangeproxy.asn.MaxMindDatabase;
-import io.d2a.strangeproxy.command.StrangeProxyCommandManager;
-import io.d2a.strangeproxy.command.commands.StatusCommand;
 import io.d2a.strangeproxy.config.Config;
 import io.d2a.strangeproxy.mirroring.StrangeProxyClient;
 import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,11 +62,15 @@ public class StrangeProxy implements Runnable {
     @Getter
     private MaxMindDatabase database;
 
-    @Getter
-    private StrangeProxyConsole console;
+    // For log4j 2
+    static {
+        @SuppressWarnings("unused")
+        Class<?>[] classes = new Class<?>[]{
+                ConsoleAppender.class,
+                PatternLayout.class
+        };
+    }
 
-    @Getter
-    private StrangeProxyCommandManager commandManager;
     ////////////////////////////////////////////////////////////////////////
 
     /*
@@ -74,14 +78,6 @@ public class StrangeProxy implements Runnable {
      */
     public StrangeProxy() {
         StrangeProxy.instance = this;
-
-        // Console
-        this.console = new StrangeProxyConsole(this);
-        this.console.setupStreams();
-
-        // Command Manager
-        this.commandManager = new StrangeProxyCommandManager();
-        this.commandManager.register(new StatusCommand(), "status");
 
         getLogger().info("Loading config ...");
 
@@ -145,8 +141,6 @@ public class StrangeProxy implements Runnable {
         server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, Proxy.NO_PROXY);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
 
-        System.out.println(config.status.maxPlayers);
-
         server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> new ServerStatusInfo(
                 config.versionInfo != null
                         ? config.versionInfo
@@ -156,18 +150,17 @@ public class StrangeProxy implements Runnable {
                 null
         ));
 
-//        server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, (ServerLoginHandler) session -> session.disconnect("awd"));
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100);
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
-                getLogger().info("-- Server closed. --");
+                getLogger().warn("-- Server closed. --");
             }
         });
 
-        getLogger().info("-> Binding on port: " + port + ", host: " + host + " ...");
+        getLogger().info("Binding on port: " + port + ", host: " + host + " ...");
         server.bind();
-        getLogger().info(" Done!");
+        getLogger().info("Done binding!");
 
         if (config.mirroring.enabled) {
             final StrangeProxyClient strangeProxyClient = new StrangeProxyClient(config);
@@ -179,8 +172,6 @@ public class StrangeProxy implements Runnable {
                 }
             }, 0, 10000);
         }
-
-        getLogger().error("Test");
     }
 
 }

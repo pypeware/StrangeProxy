@@ -27,26 +27,26 @@ import io.d2a.strangeproxy.config.Config;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
-import net.md_5.bungee.chat.TextComponentSerializer;
 
 import java.net.Proxy;
-import java.util.Arrays;
 
 public class StrangeProxyClient {
 
-    private Gson gson = new GsonBuilder()
-            .registerTypeAdapter(TextComponent.class, new TextComponentSerializer())
-            .create();
+//    private Gson gson = new GsonBuilder()
+//            .registerTypeAdapter(TextComponent.class, new TextComponentSerializer())
+//            .create();
 
     private Config config;
 
     public StrangeProxyClient(Config config) {
         this.config = config;
 
-        System.out.println("[Mirroring] Checking: " + config.mirroring.host + ":" + config.mirroring.port);
+        StrangeProxy.getLogger().info("[Mirroring] Checking: " + config.mirroring.host + ":" + config.mirroring.port);
     }
 
     public void update() {
+        StrangeProxy.getLogger().debug("Updating mirror ...");
+
         MinecraftProtocol protocol = new MinecraftProtocol(SubProtocol.STATUS);
         Client client = new Client(config.mirroring.host,
                 config.mirroring.port,
@@ -57,6 +57,7 @@ public class StrangeProxyClient {
         client.getSession().setFlag(MinecraftConstants.SERVER_INFO_HANDLER_KEY, new ServerInfoHandler() {
             @Override
             public void handle(Session session, ServerStatusInfo info) {
+
                 final BaseComponent[] parse = ComponentSerializer.parse(info.getDescription().toJsonString());
 
                 StrangeProxy.getConfig().status.motd = new TextComponent(parse).toLegacyText();
@@ -67,6 +68,8 @@ public class StrangeProxyClient {
 
                 // Disconnect client
                 session.disconnect("");
+
+                StrangeProxy.getLogger().debug("Done");
             }
         });
         client.getSession().connect();

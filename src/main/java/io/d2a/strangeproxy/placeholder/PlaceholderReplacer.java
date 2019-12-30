@@ -14,6 +14,7 @@ package io.d2a.strangeproxy.placeholder;
 
 
 import com.github.steveice10.packetlib.Session;
+import io.d2a.strangeproxy.StrangeProxy;
 import io.d2a.strangeproxy.placeholder.placeholders.AsnPlaceholder;
 
 import java.util.Arrays;
@@ -26,15 +27,15 @@ public class PlaceholderReplacer {
     ));
 
     public static String apply(Session session, String string) {
-        System.out.println("Apply to '" + string + "'");
+        StrangeProxy.getLogger().debug("Apply to '" + string + "'");
         String result = string;
 
         for (Placeholder placeholder : placeholders) {
             if (string.contains(placeholder.fullPlaceholder())) {
-                System.out.println("  -> Found " + placeholder.fullPlaceholder());
+                StrangeProxy.getLogger().debug("  -> Found " + placeholder.fullPlaceholder());
 
                 final String apply = placeholder.apply(session, string);
-                System.out.println("  -> " + apply);
+                StrangeProxy.getLogger().debug("  -> " + apply);
                 if (apply != null) {
                     result = result.replace(placeholder.fullPlaceholder(), apply);
                 }

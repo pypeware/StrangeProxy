@@ -215,6 +215,7 @@
                                     <mainClass>io.d2a.strangeproxy.StrangeProxy</mainClass>
                                 </transformer>
                             </transformers>
+
                         </configuration>
                     </execution>
                 </executions>

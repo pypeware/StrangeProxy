@@ -12,6 +12,8 @@
 
 package io.d2a.strangeproxy.asn;
 
+import io.d2a.strangeproxy.StrangeProxy;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,7 +35,7 @@ public class GZipFile {
 
         try {
 
-            System.out.println("[GZip] Unzipping '" + inputFile + "' to '" + outputFile + "' ...");
+            StrangeProxy.getLogger().info("[GZip] Unzipping '" + inputFile + "' to '" + outputFile + "' ...");
 
             GZIPInputStream gzis =
                     new GZIPInputStream(new FileInputStream(inputFile));
@@ -49,7 +51,7 @@ public class GZipFile {
             gzis.close();
             out.close();
 
-            System.out.println("[GZip] Done");
+            StrangeProxy.getLogger().info("[GZip] Done");
 
         } catch (IOException ex) {
             ex.printStackTrace();

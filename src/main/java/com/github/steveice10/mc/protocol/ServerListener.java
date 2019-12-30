@@ -92,7 +92,6 @@ public class ServerListener extends SessionAdapter {
                                 event.getSession(),
                                 StrangeProxy.getConfig().status.motd
                         );
-                        System.out.println(s);
                         event.getSession().disconnect(s);
 
                         break;

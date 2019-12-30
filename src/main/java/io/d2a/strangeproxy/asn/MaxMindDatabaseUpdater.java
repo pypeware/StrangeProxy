@@ -12,6 +12,7 @@
 
 package io.d2a.strangeproxy.asn;
 
+import io.d2a.strangeproxy.StrangeProxy;
 import io.d2a.strangeproxy.config.Config;
 import lombok.SneakyThrows;
 
@@ -46,18 +47,18 @@ public class MaxMindDatabaseUpdater {
     public boolean check() {
 
         if (!databaseFile.exists()) {
-            System.out.println("[MaxMind] Update-Reason: Datebase-File does not exist!");
+            StrangeProxy.getLogger().info("[MaxMind] Update-Reason: Datebase-File does not exist!");
             return true;
         }
 
         if (!updateInfoFile.exists()) {
-            System.out.println("[MaxMind] Update-Reason: Updateinfo-File does not exist!");
+            StrangeProxy.getLogger().info("[MaxMind] Update-Reason: Updateinfo-File does not exist!");
             return true;
         }
 
         long lastUpdate = Long.parseLong(Files.readAllLines(updateInfoFile.toPath()).get(0));
         if (lastUpdate + updateInterval < System.currentTimeMillis()) {
-            System.out.println("[MaxMind] Update-Reason: Interval (" + updateInterval + ") catched");
+            StrangeProxy.getLogger().info("[MaxMind] Update-Reason: Interval (" + updateInterval + ") catched");
             return true;
         }
 
@@ -72,13 +73,13 @@ public class MaxMindDatabaseUpdater {
     public void updateSync(String url, File outputFile) throws IOException {
 
         if (!outputFile.getParentFile().exists()) {
-            System.out.println("[MaxMind] Output-Directory does not exist. Creating: " +
+            StrangeProxy.getLogger().warn("[MaxMind] Output-Directory does not exist. Creating: " +
                     ((outputFile.getParentFile().mkdirs())
                             ? "success" : "error"));
         }
 
         if (outputFile.exists()) {
-            System.out.println("[MaxMind] Out-File already exists. Deleting: " +
+            StrangeProxy.getLogger().warn("[MaxMind] Out-File already exists. Deleting: " +
                     ((outputFile.delete())
                             ? "success" : "error"));
         }
