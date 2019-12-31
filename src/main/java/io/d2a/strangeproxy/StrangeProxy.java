@@ -21,6 +21,7 @@ import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo;
 import com.github.steveice10.mc.protocol.data.status.VersionInfo;
 import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder;
 import com.github.steveice10.packetlib.Server;
+import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.event.server.ServerAdapter;
 import com.github.steveice10.packetlib.event.server.ServerClosedEvent;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
@@ -31,6 +32,8 @@ import io.d2a.strangeproxy.asn.MaxMindDatabase;
 import io.d2a.strangeproxy.config.Config;
 import io.d2a.strangeproxy.mirroring.StrangeProxyClient;
 import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
+import io.d2a.strangeproxy.stats.Stats;
+import io.d2a.strangeproxy.stats.StatsManager;
 import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -140,14 +143,21 @@ public class StrangeProxy implements Runnable {
         server.setGlobalFlag(MinecraftConstants.AUTH_PROXY_KEY, Proxy.NO_PROXY);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
 
-        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session -> config.serverStatusInfo != null
-                        ? config.serverStatusInfo
-                        : new ServerStatusInfo(
-                        new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
-                        new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
-                        new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
-                        null
-                )
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, new ServerInfoBuilder() {
+                    @Override
+                    public ServerStatusInfo buildInfo(Session session) {
+                        Stats.pings++;
+
+                        return config.serverStatusInfo != null
+                                ? config.serverStatusInfo
+                                : new ServerStatusInfo(
+                                new VersionInfo(MinecraftConstants.GAME_VERSION, MinecraftConstants.PROTOCOL_VERSION),
+                                new PlayerInfo(config.status.maxPlayers, config.status.currentPlayers, new GameProfile[0]),
+                                new TextMessage(PlaceholderReplacer.coloredApply(session, config.status.motd)),
+                                null
+                        );
+                    }
+                }
         );
 
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 100);
@@ -164,7 +174,10 @@ public class StrangeProxy implements Runnable {
 
         // Mirroring Task
         new StrangeProxyClient(config)
-                .startUpdateTask();
+                .startUpdateTask(config);
+
+        // Stats
+        new StatsManager();
     }
 
 }

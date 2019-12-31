@@ -22,8 +22,6 @@ public class StrangeProxyClient {
 
     public StrangeProxyClient(Config config) {
         this.config = config;
-
-        StrangeProxy.getLogger().info("[Mirroring] Checking: " + config.mirroring.host + ":" + config.mirroring.port);
     }
 
     public void startUpdateTask(Config config) {
@@ -38,6 +36,7 @@ public class StrangeProxyClient {
             this.updateThread.interrupt();
         }
 
+        StrangeProxy.getLogger().info("[Mirroring] Checking: " + config.mirroring.host + ":" + config.mirroring.port);
         this.updateThread = new Thread(new MirrorTask(config), "Mirroring Task");
         this.updateThread.start();
     }

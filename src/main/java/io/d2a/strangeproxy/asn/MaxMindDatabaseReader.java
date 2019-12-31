@@ -37,6 +37,7 @@ public class MaxMindDatabaseReader {
         try {
             return getAsn(address);
         } catch (IOException | GeoIp2Exception e) {
+            StrangeProxy.getLogger().error("Error reading asn for " + address, e);
             return null;
         }
     }

@@ -1,15 +1,16 @@
 [strangeproxy]
     host = "0.0.0.0"
-    port = 5187
+    port = 5188
     kick_message = """
+&8-&7*&8-
+&7Dein Netzwerk steht auf der &c&lBlacklist&7!
+&e&oIst vielleicht dein VPN eingeschaltet?
 
-&8&m----------------------------------
+&7Sollte dies ein Fehler sein, melde dich bitte im Forum
+mit folgendem Code: &2L2-{asn}&7, danke!
 
-&c&lBitte deaktiviere deine VPN!
-&7Code für den Support: &e{asn}
-
-&8&m----------------------------------
-"""
+&cHorstBlocks.DE
+&8-&7*&8-"""
 
 [maxmind]
     url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key={license_key}&suffix=tar.gz"

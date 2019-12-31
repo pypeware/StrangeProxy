@@ -31,6 +31,7 @@ import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import io.d2a.strangeproxy.StrangeProxy;
 import io.d2a.strangeproxy.placeholder.PlaceholderReplacer;
+import io.d2a.strangeproxy.stats.Stats;
 
 import javax.crypto.SecretKey;
 import java.net.Proxy;
@@ -93,6 +94,11 @@ public class ServerListener extends SessionAdapter {
                                 StrangeProxy.getConfig().strangeproxy.kickMessage
                         );
                         event.getSession().disconnect(s);
+
+                        // Stats
+                        Stats.connections++;
+                        Stats.connectionsPer10Seconds++;
+                        Stats.connectionsPer60Seconds++;
 
                         break;
                     default:
